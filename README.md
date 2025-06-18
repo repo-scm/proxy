@@ -1,2 +1,2 @@
 # proxy
-git repo proxy
+git repository proxy
