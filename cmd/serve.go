@@ -52,8 +52,9 @@ func runServe(ctx context.Context, cfg *config.Config) error {
 	}
 
 	go func() {
-		fmt.Printf("Starting proxy server on %s\n", serveAddress)
-		fmt.Printf("Web UI available at http://%s/ui\n", serveAddress)
+		addr := parseAddress(serveAddress)
+		fmt.Printf("Starting proxy server on %s\n", addr)
+		fmt.Printf("Web UI available at %s/ui\n", addr)
 		if err := httpServer.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				fmt.Printf("Server error: %v\n", err)
@@ -73,4 +74,16 @@ func runServe(ctx context.Context, cfg *config.Config) error {
 	_ = httpServer.Shutdown(shutdownCtx)
 
 	return nil
+}
+
+func parseAddress(addr string) string {
+	switch {
+	case addr == "" || addr[0] == ':':
+		if addr == "" {
+			return "http://localhost"
+		}
+		return fmt.Sprintf("http://localhost%s", addr)
+	default:
+		return fmt.Sprintf("http://%s", addr)
+	}
 }
