@@ -18,6 +18,7 @@ git sites proxy
 ### 1. Run proxy server
 
 ```bash
+# http://localhost:9090/ui
 proxy serve [--address string]
 ```
 
