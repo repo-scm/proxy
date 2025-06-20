@@ -2,12 +2,22 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/repo-scm/proxy/config"
+	"github.com/repo-scm/proxy/server"
+)
+
+const (
+	shutdownTimeout = 5 * time.Second
 )
 
 var (
@@ -35,5 +45,32 @@ func init() {
 }
 
 func runServe(ctx context.Context, cfg *config.Config) error {
+	srv := server.NewServer(cfg)
+	httpServer := &http.Server{
+		Addr:    serveAddress,
+		Handler: srv.Handler(),
+	}
+
+	go func() {
+		fmt.Printf("Starting proxy server on %s\n", serveAddress)
+		fmt.Printf("Web UI available at http://%s/ui\n", serveAddress)
+		if err := httpServer.ListenAndServe(); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				fmt.Printf("Server error: %v\n", err)
+			}
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	fmt.Println("Shutting down server...")
+
+	_ = httpServer.Shutdown(shutdownCtx)
+
 	return nil
 }

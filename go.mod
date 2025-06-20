@@ -3,6 +3,7 @@ module github.com/repo-scm/proxy
 go 1.24.3
 
 require (
+	github.com/gorilla/mux v1.8.1
 	github.com/olekukonko/tablewriter v1.0.7
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.9.1
