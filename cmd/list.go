@@ -12,7 +12,7 @@ import (
 
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List available sites",
+	Short: "List all sites",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		config := GetConfig()

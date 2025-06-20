@@ -28,7 +28,7 @@ proxy serve [--address string]
 proxy query [--output string] [--verbose]
 ```
 
-### 3. List available sites
+### 3. List all sites
 
 ```bash
 proxy list
