@@ -29,21 +29,75 @@ type Monitor struct {
 }
 
 func NewMonitor(cfg *config.Config) *Monitor {
-	return &Monitor{
+	m := &Monitor{
 		config: cfg,
 		sites:  make(map[string]*SiteStatus),
 		client: &http.Client{Timeout: 10 * time.Second},
+	}
+
+	// Initialize with detailed mock data
+	m.initializeMockData()
+
+	return m
+}
+
+func (m *Monitor) initializeMockData() {
+	now := time.Now()
+
+	mockSites := []*SiteStatus{
+		{
+			Name:         "gerrit-production",
+			URL:          "https://gerrit.example.com",
+			Healthy:      true,
+			ResponseTime: 245,
+			Connections:  23,
+			QueueSize:    5,
+			LastCheck:    now.Add(-2 * time.Minute),
+			Error:        "",
+		},
+		{
+			Name:         "gerrit-staging",
+			URL:          "https://gerrit-staging.example.com",
+			Healthy:      true,
+			ResponseTime: 180,
+			Connections:  8,
+			QueueSize:    2,
+			LastCheck:    now.Add(-1 * time.Minute),
+			Error:        "",
+		},
+		{
+			Name:         "gerrit-dev",
+			URL:          "https://gerrit-dev.example.com",
+			Healthy:      false,
+			ResponseTime: 0,
+			Connections:  0,
+			QueueSize:    12,
+			LastCheck:    now.Add(-5 * time.Minute),
+			Error:        "Connection timeout",
+		},
+		{
+			Name:         "code-review-mirror",
+			URL:          "https://mirror.gerrit.example.com",
+			Healthy:      true,
+			ResponseTime: 320,
+			Connections:  15,
+			QueueSize:    1,
+			LastCheck:    now.Add(-30 * time.Second),
+			Error:        "",
+		},
+	}
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	for _, site := range mockSites {
+		m.sites[site.Name] = site
 	}
 }
 
 func (m *Monitor) GetAllSitesStatus() []*SiteStatus {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-
-	// If no sites cached, check them now
-	if len(m.sites) == 0 {
-		m.checkAllSites()
-	}
 
 	sites := make([]*SiteStatus, 0, len(m.sites))
 	for _, site := range m.sites {
@@ -74,37 +128,123 @@ func (m *Monitor) GetSiteHealth(siteName string) map[string]interface{} {
 }
 
 func (m *Monitor) GetSiteQueues(siteName string) map[string]interface{} {
-	// This would typically call REST API to get queue information
-	// For now, return mock data
+	// Enhanced mock data with more realistic queue information
+	queues := map[string]map[string]interface{}{
+		"gerrit-production": {
+			"receive": map[string]interface{}{
+				"pending": 12,
+				"running": 3,
+			},
+			"send-email": map[string]interface{}{
+				"pending": 8,
+				"running": 2,
+			},
+			"ssh": map[string]interface{}{
+				"pending": 5,
+				"running": 1,
+			},
+			"index": map[string]interface{}{
+				"pending": 15,
+				"running": 4,
+			},
+		},
+		"gerrit-staging": {
+			"receive": map[string]interface{}{
+				"pending": 3,
+				"running": 1,
+			},
+			"send-email": map[string]interface{}{
+				"pending": 2,
+				"running": 0,
+			},
+			"ssh": map[string]interface{}{
+				"pending": 1,
+				"running": 0,
+			},
+			"index": map[string]interface{}{
+				"pending": 4,
+				"running": 1,
+			},
+		},
+	}
+
+	if data, exists := queues[siteName]; exists {
+		return data
+	}
+
+	// Default queue data
 	return map[string]interface{}{
 		"receive": map[string]interface{}{
-			"pending": 5,
-			"running": 2,
+			"pending": 0,
+			"running": 0,
 		},
 		"send-email": map[string]interface{}{
 			"pending": 0,
-			"running": 1,
+			"running": 0,
 		},
 		"ssh": map[string]interface{}{
-			"pending": 3,
+			"pending": 0,
 			"running": 0,
 		},
 	}
 }
 
 func (m *Monitor) GetSiteConnections(siteName string) map[string]interface{} {
-	// This would typically call REST API to get connection information
-	// For now, return mock data
+	// Enhanced mock data with more realistic connection information
+	connections := map[string]map[string]interface{}{
+		"gerrit-production": {
+			"http": map[string]interface{}{
+				"active": 45,
+				"total":  2840,
+				"peak":   89,
+			},
+			"ssh": map[string]interface{}{
+				"active": 23,
+				"total":  1456,
+				"peak":   67,
+			},
+		},
+		"gerrit-staging": {
+			"http": map[string]interface{}{
+				"active": 12,
+				"total":  890,
+				"peak":   34,
+			},
+			"ssh": map[string]interface{}{
+				"active": 5,
+				"total":  234,
+				"peak":   18,
+			},
+		},
+		"gerrit-dev": {
+			"http": map[string]interface{}{
+				"active": 0,
+				"total":  156,
+				"peak":   12,
+			},
+			"ssh": map[string]interface{}{
+				"active": 0,
+				"total":  45,
+				"peak":   8,
+			},
+		},
+	}
+
+	if data, exists := connections[siteName]; exists {
+		return data
+	}
+
+	// Default connection data
 	return map[string]interface{}{
 		"http": map[string]interface{}{
-			"active": 15,
-			"total":  1243,
-			"peak":   45,
+			"active": 0,
+			"total":  0,
+			"peak":   0,
 		},
 		"ssh": map[string]interface{}{
-			"active": 8,
-			"total":  892,
-			"peak":   23,
+			"active": 0,
+			"total":  0,
+			"peak":   0,
 		},
 	}
 }
@@ -116,8 +256,10 @@ func (m *Monitor) checkAllSites() {
 		name string
 		url  string
 	}{
-		{"gerrit-main", "https://gerrit.example.com"},
+		{"gerrit-production", "https://gerrit.example.com"},
 		{"gerrit-staging", "https://gerrit-staging.example.com"},
+		{"gerrit-dev", "https://gerrit-dev.example.com"},
+		{"code-review-mirror", "https://mirror.gerrit.example.com"},
 	}
 
 	for _, mockSite := range mockSites {
@@ -157,13 +299,21 @@ func (m *Monitor) updateSiteStatus(name, url string, healthy bool, responseTime 
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
+	// Preserve existing connections and queue data if available
+	connections := 15
+	queueSize := 8
+	if existing, exists := m.sites[name]; exists {
+		connections = existing.Connections
+		queueSize = existing.QueueSize
+	}
+
 	m.sites[name] = &SiteStatus{
 		Name:         name,
 		URL:          url,
 		Healthy:      healthy,
 		ResponseTime: responseTime,
-		Connections:  15, // Mock data
-		QueueSize:    8,  // Mock data
+		Connections:  connections,
+		QueueSize:    queueSize,
 		LastCheck:    time.Now(),
 		Error:        errorMsg,
 	}
