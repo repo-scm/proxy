@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Proxy Monitor</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+        .sites-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .site-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; }
+        .site-header { font-weight: bold; font-size: 18px; margin-bottom: 10px; }
+        .status { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; }
+        .status.healthy { background-color: #28a745; }
+        .status.unhealthy { background-color: #dc3545; }
+        .status.unknown { background-color: #6c757d; }
+        .metrics { margin-top: 10px; }
+        .metric { display: flex; justify-content: space-between; margin: 5px 0; }
+        .refresh-btn { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        .refresh-btn:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Proxy Monitor</h1>
+        <button class="refresh-btn" onclick="refreshData()">Refresh</button>
+        <span id="last-update"></span>
+    </div>
+    <div id="sites-container" class="sites-grid">
+        Loading...
+    </div>
+</div>
+
+<script>
+    function refreshData() {
+        fetch('/api/sites')
+            .then(response => response.json())
+            .then(data => {
+                updateSitesDisplay(data);
+                updateLastUpdate();
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function updateSitesDisplay(sites) {
+        const container = document.getElementById('sites-container');
+        container.innerHTML = '';
+
+        sites.forEach(site => {
+            const siteCard = createSiteCard(site);
+            container.appendChild(siteCard);
+        });
+    }
+
+    function createSiteCard(site) {
+        const card = document.createElement('div');
+        card.className = 'site-card';
+
+        const statusClass = site.healthy ? 'healthy' : 'unhealthy';
+        const statusText = site.healthy ? 'Healthy' : 'Unhealthy';
+
+        card.innerHTML = `
+                <div class="site-header">${site.name}</div>
+                <div class="status ${statusClass}">${statusText}</div>
+                <div class="metrics">
+                    <div class="metric">
+                        <span>URL:</span>
+                        <span>${site.url}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Response Time:</span>
+                        <span>${site.responseTime}ms</span>
+                    </div>
+                    <div class="metric">
+                        <span>Active Connections:</span>
+                        <span>${site.connections}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Queue Size:</span>
+                        <span>${site.queueSize}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Last Check:</span>
+                        <span>${new Date(site.lastCheck).toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+
+        return card;
+    }
+
+    function updateLastUpdate() {
+        document.getElementById('last-update').textContent =
+            'Last updated: ' + new Date().toLocaleString();
+    }
+
+    // Initialize
+    refreshData();
+
+    // Refresh every 30 seconds
+    setInterval(refreshData, 30000);
+</script>
+</body>
+</html>
