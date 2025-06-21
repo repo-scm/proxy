@@ -20,10 +20,15 @@ type Config struct {
 }
 
 type Gerrit struct {
-	SiteName string `yaml:"site_name"`
-	ApiBase  string `yaml:"api_base"`
-	UserName string `yaml:"user_name"`
-	UserPass string `yaml:"user_pass"`
+	Name string `yaml:"name"`
+	Ssh  Ssh    `yaml:"ssh"`
+}
+
+type Ssh struct {
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
+	User string `yaml:"user"`
+	Key  string `yaml:"key"`
 }
 
 func LoadConfig(name string) (*Config, error) {

@@ -44,10 +44,12 @@ An example of settings can be found in [proxy.yaml](https://github.com/repo-scm/
 
 ```yaml
 gerrits:
-  - site_name: "your_site"
-    api_base: "http://localhost:8080"
-    user_name: "your_name"
-    user_pass: "your_pass"
+  - name: "gerrit_name"
+    ssh:
+      host: "gerrit_host"
+      port: 29418
+      user: "your_name"
+      key: "/path/to/.ssh/key_file"
 ```
 
 
