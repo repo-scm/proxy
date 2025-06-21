@@ -8,16 +8,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/repo-scm/proxy/config"
 	"github.com/repo-scm/proxy/server"
-)
-
-const (
-	shutdownTimeout = 5 * time.Second
 )
 
 var (
@@ -51,27 +46,30 @@ func runServe(ctx context.Context, cfg *config.Config) error {
 		Handler: srv.Handler(),
 	}
 
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	serverErr := make(chan error, 1)
+
 	go func() {
 		addr := parseAddress(serveAddress)
 		fmt.Printf("Starting proxy server on %s\n", addr)
 		fmt.Printf("Web UI available at %s/ui\n", addr)
 		if err := httpServer.ListenAndServe(); err != nil {
-			if !errors.Is(err, http.ErrServerClosed) {
-				fmt.Printf("Server error: %v\n", err)
-			}
+			serverErr <- err
 		}
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	select {
+	case <-ctx.Done():
+	case <-quit:
+	case err := <-serverErr:
+		if !errors.Is(err, http.ErrServerClosed) {
+			fmt.Printf("Server error: %v\n", err)
+		}
+	}
 
-	shutdownCtx, cancel := context.WithTimeout(ctx, shutdownTimeout)
-	defer cancel()
-
-	fmt.Println("Shutting down server...")
-
-	_ = httpServer.Shutdown(shutdownCtx)
+	_ = httpServer.Shutdown(ctx)
 
 	return nil
 }
