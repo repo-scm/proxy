@@ -41,6 +41,8 @@ func (s *Server) Handler() http.Handler {
 	api.HandleFunc("/sites/{site}/queues", s.handleAPISiteQueues).Methods("GET")
 	api.HandleFunc("/sites/{site}/connections", s.handleAPISiteConnections).Methods("GET")
 
+	r.Use(corsMiddleware)
+
 	return r
 }
 
@@ -105,4 +107,19 @@ func (s *Server) handleAPISiteConnections(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(connections)
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
