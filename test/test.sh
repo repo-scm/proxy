@@ -1,9 +1,9 @@
 #!/bin/bash
 
-LOCAL_HOST=""
+LOCAL_HOST="your_host"
 
-MAIN_GERRIT="10.67.16.29"
-STRICT_GERRIT="10.67.16.29"
+MAIN_GERRIT="your_site"
+STRICT_GERRIT="your_sit"
 
 JARVIS_VERSION_SHEET="true"
 IS_TEMP_SHEET="false"
@@ -31,40 +31,37 @@ check_environment() {
         local_gerrit="${strict_gerrit}"
     fi
 
-    return local_gerrit
+    echo ${local_gerrit}
 }
 
 # Check environment
-check_environment
-ret=$?
+ret=$(check_environment)
 if [[ -n "${ret}" ]]; then
     echo "LOCAL_GERRIT=${ret}"
     export LOCAL_GERRIT="${ret}"
-    exit 0
+    return
 fi
 
 # Set location to chengdu
-ret=$(./bin/test --sites "10.75.200.210")
+ret=$(go run test.go --sites "10.75.200.210" | tail -n 1 | sed 's/^best site: //')
 if [[ -n "${ret}" ]]; then
     echo "LOCAL_GERRIT=${ret}"
     export LOCAL_GERRIT="${ret}"
-    exit 0
+    return
 fi
 
 # Set location to shanghai
-ret=$(./bin/test --sites "10.67.40.202,10.63.237.206,10.67.16.29")
+ret=$(go run test.go --sites "10.67.40.202,10.63.237.206,10.67.16.29" | tail -n 1 | sed 's/^best site: //')
 if [[ -n "${ret}" ]]; then
     echo "LOCAL_GERRIT=${ret}"
     export LOCAL_GERRIT="${ret}"
-    exit 0
+    return
 fi
 
 # Set location to xian
-ret=$(./bin/test --sites "10.95.243.159,10.95.243.158")
+ret=$(go run test.go --sites "10.95.243.159,10.95.243.158" | tail -n 1 | sed 's/^best site: //')
 if [[ -n "${ret}" ]]; then
     echo "LOCAL_GERRIT=${ret}"
     export LOCAL_GERRIT="${ret}"
-    exit 0
+    return
 fi
-
-exit 0

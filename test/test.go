@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/alecthomas/kingpin/v2"
 )
@@ -114,8 +115,64 @@ func (m *Monitor) getConnection(host string) (int, error) {
 	return ConnectionMax, nil
 }
 
-func (m *Monitor) calculateScore(connections, queue int) int {
-	return connections*Weight + queue
+func (m *Monitor) getLatencyPenalty(site string) int {
+	helper := func(site string) float64 {
+		cmd := exec.Command("ssh", "-p", "29418", "-o", "ConnectTimeout=5", site, siteName, "version")
+		start := time.Now()
+		err := cmd.Run()
+		elapsed := time.Since(start)
+		if err != nil {
+			return 1000.0 // High penalty for unreachable sites
+		}
+		return float64(elapsed.Nanoseconds()) / 1000000.0 // Convert to milliseconds
+	}
+
+	// Add penalty based on network latency for remote sites
+	latency := helper(site)
+
+	// Convert latency to penalty (higher latency = higher penalty)
+	// Latency in milliseconds, penalty multiplier
+	penalty := int(latency * 0.1) // 10ms latency = 1 point penalty
+
+	return penalty
+}
+
+func (m *Monitor) getConnectionEfficiency(connections int) int {
+	// Lower connections are better, but add diminishing returns
+	if connections == 0 {
+		return -5 // Bonus for no connections
+	} else if connections <= 5 {
+		return -2 // Small bonus for low connections
+	} else if connections <= 10 {
+		return 0 // Neutral
+	} else {
+		return connections / 5 // Penalty increases with high connections
+	}
+}
+
+func (m *Monitor) getQueueEfficiency(queue int) int {
+	// Lower queue is better, exponential penalty for high queues
+	if queue == 0 {
+		return -10 // Significant bonus for empty queue
+	} else if queue <= 5 {
+		return -3 // Small bonus for low queue
+	} else if queue <= 20 {
+		return queue / 4 // Moderate penalty
+	} else {
+		return queue / 2 // Higher penalty for large queues
+	}
+}
+
+func (m *Monitor) calculateScore(site string, connections, queue int) int {
+	baseScore := connections*Weight + queue
+
+	latencyPenalty := m.getLatencyPenalty(site)
+	connectionEfficiency := m.getConnectionEfficiency(connections)
+	queueEfficiency := m.getQueueEfficiency(queue)
+
+	totalScore := baseScore + latencyPenalty + connectionEfficiency + queueEfficiency
+
+	return totalScore
 }
 
 func (m *Monitor) getMetrics(site string) Metrics {
@@ -141,18 +198,17 @@ func (m *Monitor) getMetrics(site string) Metrics {
 	}()
 
 	res := <-ch
-
 	if res.connErr != nil || res.queueErr != nil {
 		return Metrics{
 			Site:        site,
 			Connections: ConnectionMax,
 			Queue:       QueueMax,
-			Score:       m.calculateScore(ConnectionMax, QueueMax),
+			Score:       m.calculateScore(site, ConnectionMax, QueueMax),
 			Error:       fmt.Errorf("failed to get metrics for site %s", site),
 		}
 	}
 
-	score := m.calculateScore(res.connections, res.queue)
+	score := m.calculateScore(site, res.connections, res.queue)
 
 	return Metrics{
 		Site:        site,
@@ -174,12 +230,12 @@ func (m *Monitor) runTest(sites []string) (string, error) {
 	}
 
 	var bestScore int
-
 	if bestSite != "" {
 		bestMetrics := m.getMetrics(bestSite)
 		bestScore = bestMetrics.Score
+		fmt.Printf("site: %s connections: %d queue: %d score: %d\n", bestMetrics.Site, bestMetrics.Connections, bestMetrics.Queue, bestMetrics.Score)
 	} else {
-		bestScore = ConnectionMax*Weight + QueueMax
+		bestScore = ConnectionMax*Weight + QueueMax + 1000 // High fallback score
 	}
 
 	metricsChan := make(chan Metrics, len(sites))
@@ -198,6 +254,7 @@ func (m *Monitor) runTest(sites []string) (string, error) {
 
 	for i := 0; i < activeGoroutines; i++ {
 		metrics := <-metricsChan
+		fmt.Printf("site: %s connections: %d queue: %d score: %d\n", metrics.Site, metrics.Connections, metrics.Queue, metrics.Score)
 		if metrics.Error == nil && metrics.Score < bestScore {
 			bestSite = metrics.Site
 			bestScore = metrics.Score
@@ -226,5 +283,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println(site)
+	fmt.Printf("best site: %s\n", site)
 }
