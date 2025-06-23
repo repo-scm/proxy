@@ -50,6 +50,7 @@ gerrits:
       port: 29418
       user: "your_name"
       key: "/path/to/.ssh/key_file"
+      weight: 0.5
 ```
 
 
