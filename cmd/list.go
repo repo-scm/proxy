@@ -42,7 +42,7 @@ func runList(ctx context.Context, cfg *config.Config) error {
 	}
 
 	for key, val := range cfg.Gerrits {
-		fmt.Printf("name:%s, location:%s, weight:%.1f, http:%s\n", key, val.Location, val.Weight, val.Http.Url)
+		fmt.Printf("NAME:%s, LOCATION:%s, WEIGHT:%.1f, HTTP:%s\n", key, val.Location, val.Weight, val.Http.Url)
 	}
 
 	return nil
