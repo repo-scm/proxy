@@ -15,24 +15,27 @@ git sites proxy
 
 ## Usage
 
-### 1. Run proxy server
-
 ```bash
-# http://localhost:9090/ui
+# Deploy server
 proxy serve [--address string]
-```
 
-### 2. Query available site
-
-```bash
+# Query site
 proxy query [--output string] [--verbose]
-```
 
-### 3. List all sites
-
-```bash
+# List sites
 proxy list
 ```
+
+
+
+## APIs
+
+- `GET /ui` - Get server ui
+- `GET /api/status` - Get server status
+- `GET /api/sites` - Get all sites
+- `GET /api/sites/{site}/health` - Get site health
+- `GET /api/sites/{site}/queues` - Get site queues
+- `GET /api/sites/{site}/connections` - Get site connections
 
 
 
@@ -45,12 +48,11 @@ An example of settings can be found in [proxy.yaml](https://github.com/repo-scm/
 ```yaml
 gerrits:
   - name: "gerrit_name"
-    ssh:
-      host: "gerrit_host"
-      port: 29418
-      user: "your_name"
-      key: "/path/to/.ssh/key_file"
-      weight: 0.5
+    host: "gerrit_host"
+    port: 29418
+    user: "your_name"
+    key: "/path/to/.ssh/key_file"
+    weight: 0.5
 ```
 
 

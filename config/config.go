@@ -20,11 +20,7 @@ type Config struct {
 }
 
 type Gerrit struct {
-	Name string `yaml:"name"`
-	Ssh  Ssh    `yaml:"ssh"`
-}
-
-type Ssh struct {
+	Name   string  `yaml:"name"`
 	Host   string  `yaml:"host"`
 	Port   int     `yaml:"port"`
 	User   string  `yaml:"user"`
