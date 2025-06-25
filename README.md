@@ -65,9 +65,17 @@ gerrits:
 
 ## Screenshot
 
-### Monitor
+### Serve
 
-![monitor.png](monitor.png)
+![serve.png](serve.png)
+
+### Query
+
+![query.png](query.png)
+
+### List
+
+![list.png](list.png)
 
 
 
