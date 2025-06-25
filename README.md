@@ -55,6 +55,12 @@ gerrits:
     weight: 0.5
 ```
 
+> `weight`: importance factor (ranging from 0 to 1)
+>
+> A site with weight: 1.0 (high importance) will have its score unchanged  
+> A site with weight: 0.5 (medium importance) will have its score doubled (making it less preferred)  
+> A site with weight: 0.1 (low importance) will have its score multiplied by 10 (making it much less preferred)  
+
 
 
 ## Screenshot

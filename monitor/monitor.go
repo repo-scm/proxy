@@ -331,13 +331,26 @@ func (m *Monitor) getQueueEfficiency(queue int) int {
 }
 
 func (m *Monitor) calculateScore(name string, connections, queue int) int {
+	// Calculate base score using the original Weight constant
 	baseScore := connections*Weight + queue
 
 	latencyPenalty := m.getLatencyPenalty(name)
 	connectionEfficiency := m.getConnectionEfficiency(connections)
 	queueEfficiency := m.getQueueEfficiency(queue)
 
+	// Get the importance weight from the config for this specific site (0.0 to 1.0)
+	siteImportance := m.config.Gerrits[name].Weight
+	if siteImportance == 0 {
+		siteImportance = 1.0 // Default to full importance if not configured
+	}
+
+	// Calculate total score and apply site importance as a multiplier
+	// Higher importance (closer to 1.0) = lower final score (more preferred)
+	// Lower importance (closer to 0.0) = higher final score (less preferred)
 	totalScore := baseScore + latencyPenalty + connectionEfficiency + queueEfficiency
 
-	return totalScore
+	// Apply importance factor: invert it so higher importance gives lower score
+	finalScore := int(float32(totalScore) / siteImportance)
+
+	return finalScore
 }

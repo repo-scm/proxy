@@ -3,7 +3,7 @@
 LOCAL_HOST="your_host"
 
 MAIN_GERRIT="your_site"
-STRICT_GERRIT="your_sit"
+STRICT_GERRIT="your_site"
 
 JARVIS_VERSION_SHEET="true"
 IS_TEMP_SHEET="false"
