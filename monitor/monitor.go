@@ -130,7 +130,6 @@ func (m *Monitor) GetSiteConnections(name string) map[string]interface{} {
 
 func (m *Monitor) GetAvailableSite() (*SiteStatus, error) {
 	var bestSite *SiteStatus
-	var bestScore int
 
 	if len(m.sites) == 0 {
 		return nil, errors.New("no sites available\n")
@@ -152,6 +151,8 @@ func (m *Monitor) GetAvailableSite() (*SiteStatus, error) {
 			siteChan <- m.getSiteStatus(site.Name)
 		}(site)
 	}
+
+	bestScore := ConnectionMax*Weight + QueueMax + 1000 // High fallback score
 
 	for i := 0; i < activeGoroutines; i++ {
 		site := <-siteChan
