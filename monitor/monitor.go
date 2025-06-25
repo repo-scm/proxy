@@ -80,18 +80,7 @@ func (m *Monitor) GetSiteHealth(name string) map[string]interface{} {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	helper := func(name string) (float64, error) {
-		cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Ssh.Port), "-i", m.config.Gerrits[name].Ssh.Key, "-o", "ConnectTimeout=5", fmt.Sprintf("%s@%s", m.config.Gerrits[name].Ssh.User, m.config.Gerrits[name].Ssh.Host), siteName, "version")
-		start := time.Now()
-		err := cmd.Run()
-		elapsed := time.Since(start)
-		if err != nil {
-			return 1000.0, err // High penalty for unreachable sites
-		}
-		return float64(elapsed.Nanoseconds()) / 1000000.0, nil // Convert to milliseconds
-	}
-
-	responseTime, err := helper(name)
+	responseTime, err := m.getResponseTime(name)
 	if err != nil {
 		return map[string]interface{}{
 			"name":         name,
@@ -175,6 +164,20 @@ func (m *Monitor) GetAvailableSite() (*SiteStatus, error) {
 	return bestSite, nil
 }
 
+func (m *Monitor) getResponseTime(name string) (float64, error) {
+	cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Ssh.Port), "-i", m.config.Gerrits[name].Ssh.Key, "-o", "ConnectTimeout=5", fmt.Sprintf("%s@%s", m.config.Gerrits[name].Ssh.User, m.config.Gerrits[name].Ssh.Host), siteName, "version")
+
+	start := time.Now()
+	err := cmd.Run()
+	elapsed := time.Since(start)
+
+	if err != nil {
+		return 1000.0, err // High penalty for unreachable sites
+	}
+
+	return float64(elapsed.Nanoseconds()) / 1000000.0, nil // Convert to milliseconds
+}
+
 func (m *Monitor) getSiteStatus(name string) *SiteStatus {
 	type result struct {
 		connections int
@@ -207,20 +210,21 @@ func (m *Monitor) getSiteStatus(name string) *SiteStatus {
 			ResponseTime: -1,
 			Connections:  ConnectionMax,
 			QueueSize:    QueueMax,
-			Score:        m.calculateScore(name, ConnectionMax, QueueMax),
+			Score:        -1,
 			LastCheck:    time.Now(),
 			Error:        fmt.Sprintf("failed to get status for site %s", name),
 		}
 	}
 
+	responseTime, _ := m.getResponseTime(name)
 	score := m.calculateScore(name, res.connections, res.queue)
 
 	return &SiteStatus{
 		Name:         name,
 		Url:          m.sites[name].Url,
 		Host:         m.sites[name].Host,
-		Healthy:      false,
-		ResponseTime: -1,
+		Healthy:      true,
+		ResponseTime: int64(responseTime),
 		Connections:  res.connections,
 		QueueSize:    res.queue,
 		Score:        score,
@@ -287,19 +291,8 @@ func (m *Monitor) getConnection(name string) (int, error) {
 }
 
 func (m *Monitor) getLatencyPenalty(name string) int {
-	helper := func(name string) float64 {
-		cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Ssh.Port), "-i", m.config.Gerrits[name].Ssh.Key, "-o", "ConnectTimeout=5", fmt.Sprintf("%s@%s", m.config.Gerrits[name].Ssh.User, m.config.Gerrits[name].Ssh.Host), siteName, "version")
-		start := time.Now()
-		err := cmd.Run()
-		elapsed := time.Since(start)
-		if err != nil {
-			return 1000.0 // High penalty for unreachable sites
-		}
-		return float64(elapsed.Nanoseconds()) / 1000000.0 // Convert to milliseconds
-	}
-
 	// Add penalty based on network latency for remote sites
-	latency := helper(name)
+	latency, _ := m.getResponseTime(name)
 
 	// Convert latency to penalty (higher latency = higher penalty)
 	// Latency in milliseconds, penalty multiplier
