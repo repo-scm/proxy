@@ -54,10 +54,10 @@ func NewMonitor(cfg *config.Config) *Monitor {
 }
 
 func (m *Monitor) initializeMonitor() {
-	for _, site := range m.config.Gerrits {
-		m.sites[site.Name] = &SiteStatus{
-			Name: site.Name,
-			Host: site.Host,
+	for key, val := range m.config.Gerrits {
+		m.sites[key] = &SiteStatus{
+			Name: key,
+			Host: val.Host,
 		}
 	}
 }
@@ -78,8 +78,8 @@ func (m *Monitor) GetSiteHealth(name string) map[string]interface{} {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	helper := func(host string) (float64, error) {
-		cmd := exec.Command("ssh", "-p", "29418", "-o", "ConnectTimeout=5", host, siteName, "version")
+	helper := func(name string) (float64, error) {
+		cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, "-o", "ConnectTimeout=5", fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "version")
 		start := time.Now()
 		err := cmd.Run()
 		elapsed := time.Since(start)
@@ -89,7 +89,7 @@ func (m *Monitor) GetSiteHealth(name string) map[string]interface{} {
 		return float64(elapsed.Nanoseconds()) / 1000000.0, nil // Convert to milliseconds
 	}
 
-	responseTime, err := helper(m.sites[name].Host)
+	responseTime, err := helper(name)
 	if err != nil {
 		return map[string]interface{}{
 			"name":         name,
@@ -113,7 +113,7 @@ func (m *Monitor) GetSiteQueues(name string) map[string]interface{} {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	queue, err := m.getQueue(m.sites[name].Host)
+	queue, err := m.getQueue(name)
 	if err != nil {
 		return map[string]interface{}{}
 	}
@@ -127,7 +127,7 @@ func (m *Monitor) GetSiteConnections(name string) map[string]interface{} {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	connections, err := m.getConnection(m.sites[name].Host)
+	connections, err := m.getConnection(name)
 	if err != nil {
 		return map[string]interface{}{}
 	}
@@ -184,8 +184,8 @@ func (m *Monitor) getSiteStatus(name string) *SiteStatus {
 	ch := make(chan result, 1)
 
 	go func() {
-		connections, connErr := m.getConnection(m.sites[name].Host)
-		queue, queueErr := m.getQueue(m.sites[name].Host)
+		connections, connErr := m.getConnection(name)
+		queue, queueErr := m.getQueue(name)
 
 		ch <- result{
 			connections: connections,
@@ -204,13 +204,13 @@ func (m *Monitor) getSiteStatus(name string) *SiteStatus {
 			ResponseTime: -1,
 			Connections:  ConnectionMax,
 			QueueSize:    QueueMax,
-			Score:        m.calculateScore(m.sites[name].Host, ConnectionMax, QueueMax),
+			Score:        m.calculateScore(name, ConnectionMax, QueueMax),
 			LastCheck:    time.Now(),
 			Error:        fmt.Sprintf("failed to get status for site %s", name),
 		}
 	}
 
-	score := m.calculateScore(m.sites[name].Host, res.connections, res.queue)
+	score := m.calculateScore(name, res.connections, res.queue)
 
 	return &SiteStatus{
 		Name:         name,
@@ -225,13 +225,13 @@ func (m *Monitor) getSiteStatus(name string) *SiteStatus {
 	}
 }
 
-func (m *Monitor) getQueue(host string) (int, error) {
-	cmd := exec.Command("ssh", "-p", "29418", host, siteName, "version")
+func (m *Monitor) getQueue(name string) (int, error) {
+	cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "version")
 	if err := cmd.Run(); err != nil {
 		return QueueMax, nil
 	}
 
-	cmd = exec.Command("ssh", "-p", "29418", host, siteName, "show-queue", "-w")
+	cmd = exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "show-queue", "-w")
 	output, err := cmd.Output()
 	if err != nil {
 		return QueueMax, nil
@@ -252,13 +252,13 @@ func (m *Monitor) getQueue(host string) (int, error) {
 	return QueueMax, nil
 }
 
-func (m *Monitor) getConnection(host string) (int, error) {
-	cmd := exec.Command("ssh", "-p", "29418", host, siteName, "version")
+func (m *Monitor) getConnection(name string) (int, error) {
+	cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "version")
 	if err := cmd.Run(); err != nil {
 		return ConnectionMax, nil
 	}
 
-	cmd = exec.Command("ssh", "-p", "29418", host, siteName, "show-connections", "-w")
+	cmd = exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "show-connections", "-w")
 	output, err := cmd.Output()
 	if err != nil {
 		return ConnectionMax, nil
@@ -282,9 +282,9 @@ func (m *Monitor) getConnection(host string) (int, error) {
 	return ConnectionMax, nil
 }
 
-func (m *Monitor) getLatencyPenalty(host string) int {
-	helper := func(host string) float64 {
-		cmd := exec.Command("ssh", "-p", "29418", "-o", "ConnectTimeout=5", host, siteName, "version")
+func (m *Monitor) getLatencyPenalty(name string) int {
+	helper := func(name string) float64 {
+		cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, "-o", "ConnectTimeout=5", fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "version")
 		start := time.Now()
 		err := cmd.Run()
 		elapsed := time.Since(start)
@@ -295,7 +295,7 @@ func (m *Monitor) getLatencyPenalty(host string) int {
 	}
 
 	// Add penalty based on network latency for remote sites
-	latency := helper(host)
+	latency := helper(name)
 
 	// Convert latency to penalty (higher latency = higher penalty)
 	// Latency in milliseconds, penalty multiplier
@@ -330,10 +330,10 @@ func (m *Monitor) getQueueEfficiency(queue int) int {
 	}
 }
 
-func (m *Monitor) calculateScore(host string, connections, queue int) int {
+func (m *Monitor) calculateScore(name string, connections, queue int) int {
 	baseScore := connections*Weight + queue
 
-	latencyPenalty := m.getLatencyPenalty(host)
+	latencyPenalty := m.getLatencyPenalty(name)
 	connectionEfficiency := m.getConnectionEfficiency(connections)
 	queueEfficiency := m.getQueueEfficiency(queue)
 

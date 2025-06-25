@@ -47,11 +47,11 @@ An example of settings can be found in [proxy.yaml](https://github.com/repo-scm/
 
 ```yaml
 gerrits:
-  - name: "gerrit_name"
-    host: "gerrit_host"
+  "gerrit_name":
+    host: "127.0.0.1"
     port: 29418
     user: "your_name"
-    key: "/path/to/.ssh/key_file"
+    key: "/path/to/ssh/private/key"
     weight: 0.5
 ```
 

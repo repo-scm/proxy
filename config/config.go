@@ -16,11 +16,10 @@ import (
 var configData string
 
 type Config struct {
-	Gerrits []Gerrit `yaml:"gerrits"`
+	Gerrits map[string]Gerrit `yaml:"gerrits"`
 }
 
 type Gerrit struct {
-	Name   string  `yaml:"name"`
 	Host   string  `yaml:"host"`
 	Port   int     `yaml:"port"`
 	User   string  `yaml:"user"`
