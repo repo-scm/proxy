@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/repo-scm/proxy/utils"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -11,8 +12,8 @@ import (
 )
 
 var (
-	outputFile  string
-	verboseMode bool
+	outputFile   string
+	verboseQuery bool
 )
 
 var queryCmd = &cobra.Command{
@@ -21,7 +22,12 @@ var queryCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
 		config := GetConfig()
-		if err := runQuery(ctx, config); err != nil {
+		_path := utils.ExpandTilde(outputFile)
+		if _, err := os.Stat(_path); err == nil {
+			_, _ = fmt.Fprintln(os.Stderr, err.Error())
+			os.Exit(1)
+		}
+		if err := runQuery(ctx, config, _path); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
@@ -33,9 +39,9 @@ func init() {
 	rootCmd.AddCommand(queryCmd)
 
 	queryCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "output.json", "output file")
-	queryCmd.PersistentFlags().BoolVarP(&verboseMode, "verbose", "v", false, "verbose mode")
+	queryCmd.PersistentFlags().BoolVarP(&verboseQuery, "verbose", "v", false, "verbose mode")
 }
 
-func runQuery(ctx context.Context, cfg *config.Config) error {
+func runQuery(ctx context.Context, cfg *config.Config, _path string) error {
 	return nil
 }

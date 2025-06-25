@@ -1,7 +1,11 @@
 gerrits:
   "gerrit_name":
-    host: "127.0.0.1"
-    port: 29418
-    user: "your_name"
-    key: "/path/to/ssh/private/key"
+    location: "gerrit_location"
     weight: 0.5
+    http:
+      url: "http://127.0.0.1:8080"
+    ssh:
+      host: "127.0.0.1"
+      port: 29418
+      user: "your_name"
+      key: "/path/to/ssh/private/key"

@@ -20,11 +20,21 @@ type Config struct {
 }
 
 type Gerrit struct {
-	Host   string  `yaml:"host"`
-	Port   int     `yaml:"port"`
-	User   string  `yaml:"user"`
-	Key    string  `yaml:"key"`
-	Weight float32 `yaml:"weight"`
+	Location string  `yaml:"location"`
+	Weight   float32 `yaml:"weight"`
+	Http     Http    `yaml:"http"`
+	Ssh      Ssh     `yaml:"ssh"`
+}
+
+type Http struct {
+	Url string `yaml:"url"`
+}
+
+type Ssh struct {
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
+	User string `yaml:"user"`
+	Key  string `yaml:"key"`
 }
 
 func LoadConfig(name string) (*Config, error) {

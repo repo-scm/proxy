@@ -23,7 +23,7 @@ proxy serve [--address string]
 proxy query [--output string] [--verbose]
 
 # List sites
-proxy list
+proxy list [--verbose]
 ```
 
 
@@ -48,11 +48,15 @@ An example of settings can be found in [proxy.yaml](https://github.com/repo-scm/
 ```yaml
 gerrits:
   "gerrit_name":
-    host: "127.0.0.1"
-    port: 29418
-    user: "your_name"
-    key: "/path/to/ssh/private/key"
+    location: "gerrit_location"
     weight: 0.5
+    http:
+      url: "http://127.0.0.1:8080"
+    ssh:
+      host: "127.0.0.1"
+      port: 29418
+      user: "your_name"
+      key: "/path/to/ssh/private/key"
 ```
 
 > `weight`: importance factor (ranging from 0 to 1)

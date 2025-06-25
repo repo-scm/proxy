@@ -24,6 +24,7 @@ const (
 
 type SiteStatus struct {
 	Name         string    `json:"name"`
+	Url          string    `json:"url"`
 	Host         string    `json:"host"`
 	Healthy      bool      `json:"healthy"`
 	ResponseTime int64     `json:"responseTime"`
@@ -57,7 +58,8 @@ func (m *Monitor) initializeMonitor() {
 	for key, val := range m.config.Gerrits {
 		m.sites[key] = &SiteStatus{
 			Name: key,
-			Host: val.Host,
+			Url:  val.Http.Url,
+			Host: val.Ssh.Host,
 		}
 	}
 }
@@ -79,7 +81,7 @@ func (m *Monitor) GetSiteHealth(name string) map[string]interface{} {
 	defer m.mutex.RUnlock()
 
 	helper := func(name string) (float64, error) {
-		cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, "-o", "ConnectTimeout=5", fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "version")
+		cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Ssh.Port), "-i", m.config.Gerrits[name].Ssh.Key, "-o", "ConnectTimeout=5", fmt.Sprintf("%s@%s", m.config.Gerrits[name].Ssh.User, m.config.Gerrits[name].Ssh.Host), siteName, "version")
 		start := time.Now()
 		err := cmd.Run()
 		elapsed := time.Since(start)
@@ -199,6 +201,7 @@ func (m *Monitor) getSiteStatus(name string) *SiteStatus {
 	if res.connErr != nil || res.queueErr != nil {
 		return &SiteStatus{
 			Name:         name,
+			Url:          m.sites[name].Url,
 			Host:         m.sites[name].Host,
 			Healthy:      false,
 			ResponseTime: -1,
@@ -214,6 +217,7 @@ func (m *Monitor) getSiteStatus(name string) *SiteStatus {
 
 	return &SiteStatus{
 		Name:         name,
+		Url:          m.sites[name].Url,
 		Host:         m.sites[name].Host,
 		Healthy:      false,
 		ResponseTime: -1,
@@ -226,12 +230,12 @@ func (m *Monitor) getSiteStatus(name string) *SiteStatus {
 }
 
 func (m *Monitor) getQueue(name string) (int, error) {
-	cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "version")
+	cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Ssh.Port), "-i", m.config.Gerrits[name].Ssh.Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].Ssh.User, m.config.Gerrits[name].Ssh.Host), siteName, "version")
 	if err := cmd.Run(); err != nil {
 		return QueueMax, nil
 	}
 
-	cmd = exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "show-queue", "-w")
+	cmd = exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Ssh.Port), "-i", m.config.Gerrits[name].Ssh.Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].Ssh.User, m.config.Gerrits[name].Ssh.Host), siteName, "show-queue", "-w")
 	output, err := cmd.Output()
 	if err != nil {
 		return QueueMax, nil
@@ -253,12 +257,12 @@ func (m *Monitor) getQueue(name string) (int, error) {
 }
 
 func (m *Monitor) getConnection(name string) (int, error) {
-	cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "version")
+	cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Ssh.Port), "-i", m.config.Gerrits[name].Ssh.Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].Ssh.User, m.config.Gerrits[name].Ssh.Host), siteName, "version")
 	if err := cmd.Run(); err != nil {
 		return ConnectionMax, nil
 	}
 
-	cmd = exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "show-connections", "-w")
+	cmd = exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Ssh.Port), "-i", m.config.Gerrits[name].Ssh.Key, fmt.Sprintf("%s@%s", m.config.Gerrits[name].Ssh.User, m.config.Gerrits[name].Ssh.Host), siteName, "show-connections", "-w")
 	output, err := cmd.Output()
 	if err != nil {
 		return ConnectionMax, nil
@@ -284,7 +288,7 @@ func (m *Monitor) getConnection(name string) (int, error) {
 
 func (m *Monitor) getLatencyPenalty(name string) int {
 	helper := func(name string) float64 {
-		cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Port), "-i", m.config.Gerrits[name].Key, "-o", "ConnectTimeout=5", fmt.Sprintf("%s@%s", m.config.Gerrits[name].User, m.config.Gerrits[name].Host), siteName, "version")
+		cmd := exec.Command("ssh", "-p", strconv.Itoa(m.config.Gerrits[name].Ssh.Port), "-i", m.config.Gerrits[name].Ssh.Key, "-o", "ConnectTimeout=5", fmt.Sprintf("%s@%s", m.config.Gerrits[name].Ssh.User, m.config.Gerrits[name].Ssh.Host), siteName, "version")
 		start := time.Now()
 		err := cmd.Run()
 		elapsed := time.Since(start)
