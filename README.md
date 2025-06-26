@@ -74,12 +74,12 @@ gerrits:
   "NAME": "gerrit_name",
   "URL": "http://127.0.0.1:8080",
   "HOST": "127.0.0.1",
-  "HEALTHY": "false",
-  "RESPONSETIME": "0ms",
-  "CONNECTIONS": "0",
-  "QUEUESIZE": "0",
-  "SCORE": "0",
-  "LASTCHECK": "0001-01-01T00:00:00Z",
+  "HEALTHY": "true",
+  "RESPONSETIME": "132ms",
+  "CONNECTIONS": "1",
+  "QUEUESIZE": "19",
+  "SCORE": "86",
+  "LASTCHECK": "2025-06-26T10:11:22+08:00",
   "ERROR": ""
 }
 ```
