@@ -3,6 +3,7 @@ module github.com/repo-scm/proxy
 go 1.24.3
 
 require (
+	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/gorilla/mux v1.8.1
 	github.com/olekukonko/tablewriter v1.0.7
 	github.com/pkg/errors v0.9.1
@@ -12,6 +13,7 @@ require (
 )
 
 require (
+	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
@@ -29,6 +31,7 @@ require (
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
