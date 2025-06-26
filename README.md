@@ -23,7 +23,7 @@ proxy serve [--address string]
 proxy query [--output string] [--verbose]
 
 # List sites
-proxy list [--verbose]
+proxy list
 ```
 
 
@@ -71,16 +71,17 @@ gerrits:
 
 ```json
 {
-  "NAME": "gerrit_name",
-  "URL": "http://127.0.0.1:8080",
-  "HOST": "127.0.0.1",
-  "HEALTHY": "true",
-  "RESPONSETIME": "132ms",
-  "CONNECTIONS": "1",
-  "QUEUESIZE": "19",
-  "SCORE": "86",
-  "LASTCHECK": "2025-06-26T10:11:22+08:00",
-  "ERROR": ""
+  "name": "gerrit_name",
+  "location": "gerrit_location",
+  "url": "http://127.0.0.1:8080",
+  "host": "127.0.0.1",
+  "healthy": true,
+  "responseTime": 136,
+  "connections": 1,
+  "queueSize": 19,
+  "score": 88,
+  "lastCheck": "2025-06-26T11:02:41.971350295+08:00",
+  "error": ""
 }
 ```
 

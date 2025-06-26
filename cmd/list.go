@@ -12,10 +12,6 @@ import (
 	"github.com/repo-scm/proxy/utils"
 )
 
-var (
-	verboseList bool
-)
-
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all sites",
@@ -32,17 +28,11 @@ var listCmd = &cobra.Command{
 // nolint:gochecknoinits
 func init() {
 	rootCmd.AddCommand(listCmd)
-
-	listCmd.PersistentFlags().BoolVarP(&verboseList, "verbose", "v", false, "verbose mode")
 }
 
 func runList(ctx context.Context, cfg *config.Config) error {
-	if verboseList {
-		return listTable(ctx, cfg.Gerrits)
-	}
-
-	for key, val := range cfg.Gerrits {
-		fmt.Printf("NAME:%s, LOCATION:%s, WEIGHT:%.1f, HTTP:%s\n", key, val.Location, val.Weight, val.Http.Url)
+	if err := listTable(ctx, cfg.Gerrits); err != nil {
+		return err
 	}
 
 	return nil

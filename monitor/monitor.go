@@ -24,6 +24,7 @@ const (
 
 type SiteStatus struct {
 	Name         string    `json:"name"`
+	Location     string    `json:"location"`
 	Url          string    `json:"url"`
 	Host         string    `json:"host"`
 	Healthy      bool      `json:"healthy"`
@@ -32,7 +33,7 @@ type SiteStatus struct {
 	QueueSize    int       `json:"queueSize"`
 	Score        int       `json:"score"`
 	LastCheck    time.Time `json:"lastCheck"`
-	Error        string    `json:"error,omitempty"`
+	Error        string    `json:"error"`
 }
 
 type Monitor struct {
@@ -57,9 +58,10 @@ func NewMonitor(cfg *config.Config) *Monitor {
 func (m *Monitor) initializeMonitor() {
 	for key, val := range m.config.Gerrits {
 		m.sites[key] = &SiteStatus{
-			Name: key,
-			Url:  val.Http.Url,
-			Host: val.Ssh.Host,
+			Name:     key,
+			Location: val.Location,
+			Url:      val.Http.Url,
+			Host:     val.Ssh.Host,
 		}
 	}
 }
@@ -205,6 +207,7 @@ func (m *Monitor) getSiteStatus(name string) *SiteStatus {
 	if res.connErr != nil || res.queueErr != nil {
 		return &SiteStatus{
 			Name:         name,
+			Location:     m.sites[name].Location,
 			Url:          m.sites[name].Url,
 			Host:         m.sites[name].Host,
 			Healthy:      false,
@@ -222,6 +225,7 @@ func (m *Monitor) getSiteStatus(name string) *SiteStatus {
 
 	return &SiteStatus{
 		Name:         name,
+		Location:     m.sites[name].Location,
 		Url:          m.sites[name].Url,
 		Host:         m.sites[name].Host,
 		Healthy:      true,
