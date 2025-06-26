@@ -67,19 +67,28 @@ gerrits:
 
 
 
+## Output
+
+```json
+{
+  "CONNECTIONS": "0",
+  "ERROR": "",
+  "HEALTHY": "false",
+  "HOST": "127.0.0.1",
+  "LASTCHECK": "0001-01-01T00:00:00Z",
+  "NAME": "gerrit_name",
+  "QUEUESIZE": "0",
+  "RESPONSETIME": "0ms",
+  "SCORE": "0",
+  "URL": "http://127.0.0.1:8080"
+}
+```
+
+
+
 ## Screenshot
 
-### Serve
-
 ![serve.png](serve.png)
-
-### Query
-
-![query.png](query.png)
-
-### List
-
-![list.png](list.png)
 
 
 
