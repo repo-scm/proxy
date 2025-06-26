@@ -53,8 +53,8 @@ func runServe(ctx context.Context, cfg *config.Config) error {
 
 	go func() {
 		addr := parseAddress(serveAddress)
-		fmt.Printf("Starting proxy server on %s\n", addr)
-		fmt.Printf("Web UI available at %s/ui\n", addr)
+		fmt.Printf("Starting server on %s\n", addr)
+		fmt.Printf("Web UI at %s/ui\n", addr)
 		if err := httpServer.ListenAndServe(); err != nil {
 			serverErr <- err
 		}

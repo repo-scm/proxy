@@ -72,7 +72,8 @@ func (m *Monitor) GetAllSitesStatus() []*SiteStatus {
 
 	sites := make([]*SiteStatus, 0, len(m.sites))
 	for _, site := range m.sites {
-		sites = append(sites, site)
+		s := m.getSiteStatus(site.Name)
+		sites = append(sites, s)
 	}
 
 	return sites
@@ -82,23 +83,15 @@ func (m *Monitor) GetSiteHealth(name string) map[string]interface{} {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	responseTime, err := m.getResponseTime(name)
+	_, err := m.getResponseTime(name)
 	if err != nil {
 		return map[string]interface{}{
-			"name":         name,
-			"healthy":      false,
-			"responseTime": responseTime,
-			"lastCheck":    time.Now(),
-			"error":        fmt.Sprintf("failed to get health for site %s", name),
+			"healthy": false,
 		}
 	}
 
 	return map[string]interface{}{
-		"name":         name,
-		"healthy":      true,
-		"responseTime": responseTime,
-		"lastCheck":    time.Now(),
-		"error":        "",
+		"healthy": true,
 	}
 }
 

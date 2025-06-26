@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Proxy Monitor</title>
+    <title>Site Monitor</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
@@ -24,7 +24,7 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>Proxy Monitor</h1>
+        <h1>Site Monitor</h1>
         <button class="refresh-btn" onclick="refreshData()">Refresh</button>
         <span id="last-update"></span>
     </div>
@@ -84,6 +84,10 @@
                     <div class="metric">
                         <span>Queue Size:</span>
                         <span>${site.queueSize}</span>
+                    </div>
+                    <div class="metric">
+                        <span>Score:</span>
+                        <span>${site.score}</span>
                     </div>
                     <div class="metric">
                         <span>Last Check:</span>
