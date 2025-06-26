@@ -71,16 +71,16 @@ gerrits:
 
 ```json
 {
-  "CONNECTIONS": "0",
-  "ERROR": "",
-  "HEALTHY": "false",
-  "HOST": "127.0.0.1",
-  "LASTCHECK": "0001-01-01T00:00:00Z",
   "NAME": "gerrit_name",
-  "QUEUESIZE": "0",
+  "URL": "http://127.0.0.1:8080",
+  "HOST": "127.0.0.1",
+  "HEALTHY": "false",
   "RESPONSETIME": "0ms",
+  "CONNECTIONS": "0",
+  "QUEUESIZE": "0",
   "SCORE": "0",
-  "URL": "http://127.0.0.1:8080"
+  "LASTCHECK": "0001-01-01T00:00:00Z",
+  "ERROR": ""
 }
 ```
 
