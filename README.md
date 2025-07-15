@@ -20,7 +20,7 @@ git sites proxy
 proxy serve [--address string]
 
 # Query site
-proxy query [--output string] [--verbose]
+proxy query [--output string] [--site string] [--verbose]
 
 # List sites
 proxy list

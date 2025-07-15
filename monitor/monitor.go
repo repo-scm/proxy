@@ -79,6 +79,22 @@ func (m *Monitor) GetAllSitesStatus() []*SiteStatus {
 	return sites
 }
 
+func (m *Monitor) GetSiteStatus(name string) *SiteStatus {
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
+
+	var status *SiteStatus
+
+	for _, site := range m.sites {
+		if site.Name == name {
+			status = m.getSiteStatus(site.Name)
+			break
+		}
+	}
+
+	return status
+}
+
 func (m *Monitor) GetSiteHealth(name string) map[string]interface{} {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()

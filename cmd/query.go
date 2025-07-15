@@ -15,6 +15,7 @@ import (
 
 var (
 	outputFile   string
+	siteName     string
 	verboseQuery bool
 )
 
@@ -44,17 +45,25 @@ func init() {
 	rootCmd.AddCommand(queryCmd)
 
 	queryCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "", "output file")
+	queryCmd.PersistentFlags().StringVarP(&siteName, "site", "s", "", "site name")
 	queryCmd.PersistentFlags().BoolVarP(&verboseQuery, "verbose", "v", false, "verbose mode")
 }
 
-func runQuery(ctx context.Context, cfg *config.Config, _path string) error {
+func runQuery(_ context.Context, cfg *config.Config, _path string) error {
 	var buf string
+	var err error
+	var site *monitor.SiteStatus
 
 	m := monitor.NewMonitor(cfg)
 
-	site, err := m.GetAvailableSite()
-	if err != nil {
-		return err
+	if siteName != "" {
+		if site = m.GetSiteStatus(siteName); site == nil {
+			return fmt.Errorf("site %s not found", siteName)
+		}
+	} else {
+		if site, err = m.GetAvailableSite(); err != nil {
+			return err
+		}
 	}
 
 	if verboseQuery {
