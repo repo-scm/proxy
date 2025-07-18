@@ -28,6 +28,21 @@ proxy list
 
 
 
+## Docker
+
+```bash
+# Run service
+docker-compose up -d
+
+# Build and run service (optional)
+docker-compose up --build -d
+
+# View logs (optional)
+docker-compose logs -f proxy
+```
+
+
+
 ## APIs
 
 - `GET /ui` - Get server ui
