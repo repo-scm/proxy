@@ -17,6 +17,7 @@ import (
 
 var (
 	serveAddress string
+	testMode     bool
 )
 
 var serveCmd = &cobra.Command{
@@ -37,10 +38,19 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 
 	serveCmd.PersistentFlags().StringVarP(&serveAddress, "address", "a", ":9090", "serve address")
+	serveCmd.PersistentFlags().BoolVarP(&testMode, "test", "t", false, "test mode")
 }
 
 func runServe(ctx context.Context, cfg *config.Config) error {
-	srv := server.NewServer(cfg)
+	var srv *server.Server
+
+	if testMode {
+		srv = server.NewTestServer(cfg)
+		fmt.Println("Running in test mode with mock data")
+	} else {
+		srv = server.NewServer(cfg)
+	}
+
 	httpServer := &http.Server{
 		Addr:    serveAddress,
 		Handler: srv.Handler(),

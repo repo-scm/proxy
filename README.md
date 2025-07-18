@@ -17,7 +17,7 @@ git sites proxy
 
 ```bash
 # Deploy server
-proxy serve [--address string]
+proxy serve [--address string] [--test]
 
 # Query site
 proxy query [--output string] [--site string] [--verbose]

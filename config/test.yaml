@@ -1,0 +1,41 @@
+gerrits:
+  "gerrit-beijing":
+    location: "Beijing, China"
+    weight: 0.8
+    http:
+      url: "https://gerrit-beijing.com"
+    ssh:
+      host: "10.67.16.29"
+      port: 29418
+      user: "test_user"
+      key: "/tmp/test_key"
+  "gerrit-shanghai":
+    location: "Shanghai, China"
+    weight: 1.0
+    http:
+      url: "https://gerrit-shanghai.com"
+    ssh:
+      host: "10.63.237.206"
+      port: 29418
+      user: "test_user"
+      key: "/tmp/test_key"
+  "gerrit-chengdu":
+    location: "Chengdu, China"
+    weight: 0.7
+    http:
+      url: "https://gerrit-chengdu.com"
+    ssh:
+      host: "10.75.200.210"
+      port: 29418
+      user: "test_user"
+      key: "/tmp/test_key"
+  "gerrit-xian":
+    location: "Xi'an, China"
+    weight: 0.6
+    http:
+      url: "https://gerrit-xian.com"
+    ssh:
+      host: "10.95.243.159"
+      port: 29418
+      user: "test_user"
+      key: "/tmp/test_key"

@@ -37,17 +37,32 @@ type SiteStatus struct {
 }
 
 type Monitor struct {
-	config *config.Config
-	sites  map[string]*SiteStatus
-	mutex  sync.RWMutex
-	client *http.Client
+	config   *config.Config
+	sites    map[string]*SiteStatus
+	mutex    sync.RWMutex
+	client   *http.Client
+	testMode bool
 }
 
 func NewMonitor(cfg *config.Config) *Monitor {
 	m := &Monitor{
-		config: cfg,
-		sites:  make(map[string]*SiteStatus),
-		client: &http.Client{Timeout: 10 * time.Second},
+		config:   cfg,
+		sites:    make(map[string]*SiteStatus),
+		client:   &http.Client{Timeout: 10 * time.Second},
+		testMode: false,
+	}
+
+	m.initializeMonitor()
+
+	return m
+}
+
+func NewTestMonitor(cfg *config.Config) *Monitor {
+	m := &Monitor{
+		config:   cfg,
+		sites:    make(map[string]*SiteStatus),
+		client:   &http.Client{Timeout: 10 * time.Second},
+		testMode: true,
 	}
 
 	m.initializeMonitor()
@@ -69,6 +84,11 @@ func (m *Monitor) initializeMonitor() {
 func (m *Monitor) GetAllSitesStatus() []*SiteStatus {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
+
+	// Return test data if in test mode
+	if m.testMode {
+		return GetTestSitesData()
+	}
 
 	sites := make([]*SiteStatus, 0, len(m.sites))
 	for _, site := range m.sites {

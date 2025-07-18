@@ -28,6 +28,13 @@ func NewServer(cfg *config.Config) *Server {
 	}
 }
 
+func NewTestServer(cfg *config.Config) *Server {
+	return &Server{
+		config:  cfg,
+		monitor: monitor.NewTestMonitor(cfg),
+	}
+}
+
 func (s *Server) Handler() http.Handler {
 	r := mux.NewRouter()
 
