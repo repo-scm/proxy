@@ -41,8 +41,11 @@ WORKDIR /app
 # Copy only the binary from builder stage
 COPY --from=builder /app/proxy .
 
+# Create config directory
+RUN mkdir /app/config
+
 # Expose port 9090
 EXPOSE 9090
 
 # Run the proxy serve command
-CMD ["./proxy", "serve", "--address", ":9090"]
+CMD ["./proxy", "serve", "--address", ":9090", "--config", "/app/config/proxy.yaml"]
